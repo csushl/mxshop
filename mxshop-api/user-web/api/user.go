@@ -8,8 +8,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"mxshop-api/user-web/global"
+	"mxshop-api/user-web/global/reponse"
 	"mxshop-api/user-web/proto"
 	"net/http"
+	"time"
 )
 
 func HandleGrpcErrorToHttp(err error, c *gin.Context) {
@@ -44,11 +47,11 @@ func HandleGrpcErrorToHttp(err error, c *gin.Context) {
 }
 
 func GetUserList(ctx *gin.Context) {
-	ip := "127.0.0.1"
-	port := 50051
+	//ip := "127.0.0.1"
+	//port := 50051
 
 	// 拨号连接用户grpc服务器
-	userConn, err := grpc.Dial(fmt.Sprintf("%s:%d", ip, port), grpc.WithInsecure())
+	userConn, err := grpc.Dial(fmt.Sprintf("%s:%d", global.ServerConfig.UserSrvInfo.Host, global.ServerConfig.UserSrvInfo.Port), grpc.WithInsecure())
 	if err != nil {
 		zap.S().Errorw("[GetUserList] 连接[用户服务] 失败", "msg", err.Error())
 	}
@@ -69,15 +72,24 @@ func GetUserList(ctx *gin.Context) {
 	result := make([]interface{}, 0)
 
 	for _, value := range rsp.Data {
-		data := make(map[string]interface{})
+		//data := make(map[string]interface{})
 
-		data["id"] = value.Id
-		data["name"] = value.NickName
-		data["birthday"] = value.BirthDay
-		data["gender"] = value.Gender
-		data["mobile"] = value.Mobile
+		user := reponse.UserResponse{
+			Id:       value.Id,
+			NickName: value.NickName,
+			//Birthday: time.Time(time.Unix(int64(value.BirthDay), 0)),
+			Birthday: reponse.JsonTime(time.Unix(int64(value.BirthDay), 0)),
+			Gender:   value.Gender,
+			Mobile:   value.Mobile,
+		}
 
-		result = append(result, data)
+		//data["id"] = value.Id
+		//data["name"] = value.NickName
+		//data["birthday"] = value.BirthDay
+		//data["gender"] = value.Gender
+		//data["mobile"] = value.Mobile
+
+		result = append(result, user)
 	}
 
 	ctx.JSON(http.StatusOK, result)
