@@ -19,6 +19,11 @@ func main() {
 	//3. 初始化router
 	Router := initialize.Routers()
 
+	//4. 初始化翻译
+	if err := initialize.InitTrans("zh"); err != nil {
+		panic(err)
+	}
+
 	//logger, _ := zap.NewProduction()
 	//defer logger.Sync()
 	//
